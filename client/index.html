@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Websocket Chatroom (Emi Kusaba)</title>
+    <style type="text/css">
+      body {
+          font-family: sans-serif;
+          text-align: left;
+      }
+      /* .buttons { */
+      /*     font-size: 4em; */
+      /*     display: flex; */
+      /*     justify-content: center; */
+      /* } */
+
+      .button {
+          cursor: pointer;
+          user-select: none;
+          padding: 2px;
+          margin: 2px;
+          border: 1px solid black;
+      }
+
+      #chatbox {
+          border: 1px solid black;
+          min-height: 400px;
+          mid-width: 600px;
+          margin: 4px;
+          padding: 4px;
+      }
+
+      #input {
+          margin: 4px;
+          display: flex;
+          flex-direction: row;
+          text-align: center;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+
+      <div id="chatbox"></div>
+
+      <div id="input">
+        <textarea id="textbox" rows="3" cols="80"></textarea>
+        <div id="send" class="button">Send</div>
+      </div>
+    </div>
+
+    <script>
+      const chatbox = document.querySelector('#chatbox');
+      const textbox = document.querySelector('#textbox');
+      const sendbtn = document.querySelector('#send');
+      const websocket = new WebSocket("ws://127.0.0.1:6789/");
+
+      // Send message to server when 'Send' button is clicked
+      sendbtn.onclick = function (event) {
+          const text = textbox.value;
+          if(text) {
+              data = JSON.stringify({
+                  "type": "NEW",
+                  "text": text,
+              });
+              websocket.send(data);
+              textbox.value = "";
+          }
+      }
+
+      // When we receive a message from the server, display it in the chat box
+      websocket.onmessage = function (event) {
+          alldata = JSON.parse(event.data);
+          alldata.forEach((data) => {
+              switch (data.type) {
+              case "MSG":
+                  const user = data.user;
+                  const time = data.time;
+                  const text = data.text;
+                  
+                  var msg = document.createElement("div");
+                  msg.classList.add("msg");
+                  msg.innerHTML = `${time}: ${text}`;
+
+                  chatbox.appendChild(msg);
+
+                  break;
+              default:
+                  console.error(
+                      "unsupported event", data);
+              }
+          });
+      };
+    </script>
+  </body>
+</html>
